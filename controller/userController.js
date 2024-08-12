@@ -65,7 +65,6 @@ const deleteUser = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
-        // Retrieve update fields from req.body, not req.params
         const updatedUser = await User.findByIdAndUpdate(
             id,
             {
