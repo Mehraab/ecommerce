@@ -43,7 +43,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 });
 
 const getaUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.user;
     try {
         const getUser = await User.findById(id).select('-password');
         res.status(200).json(getUser);
@@ -53,9 +53,9 @@ const getaUser = asyncHandler(async (req, res) => {
 });
 
 const deleteUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.user;
     try {
-        const deleteUser = await User.findByIdAndDelete(id);
+        const deleteUser = await User.findByIdAndDelete(id).select('-password');
         res.status(200).json(deleteUser);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -63,7 +63,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 });
 
 const updateUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+    const { id } = req.user;
     try {
         const updatedUser = await User.findByIdAndUpdate(
             id,
@@ -90,5 +90,62 @@ const updateUser = asyncHandler(async (req, res) => {
     }
 });
 
+const blockUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    try {
+        const blockUser = await User.findByIdAndUpdate(
+            id,
+            {
+                isBlocked: true, 
+            },
+            {
+                new: true, 
+                runValidators: true, 
+            }
+        ).select('-password');
 
-module.exports = { register, login, getAllUsers, getaUser, deleteUser, updateUser};
+        if (!blockUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({message: "User blocked",blockUser});
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+const unblockUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    try {
+        const unblockUser = await User.findByIdAndUpdate(
+            id,
+            {
+                isBlocked: false, 
+            },
+            {
+                new: true, 
+                runValidators: true, 
+            }
+        ).select('-password');
+
+        if (!unblockUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({message: "User unblocked",unblockUser});
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
+module.exports = {
+    register,
+    login,
+    getAllUsers,
+    getaUser,
+    deleteUser,
+    updateUser,
+    blockUser,
+    unblockUser
+};
