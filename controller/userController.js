@@ -65,20 +65,31 @@ const deleteUser = asyncHandler(async (req, res) => {
 const updateUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
-        const updateUser = await User.findByIdAndUpdate(id, {
-            firstname: req?.params?.firstname,
-            lastname: req.params.lastname,
-            email: req?.params?.email,
-            mobile: req?.params?.mobile,
-            password: req?.params?.password
-        },
-        {
-            new: true
-        });
-        res.status(200).json(updateUser);
+        // Retrieve update fields from req.body, not req.params
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            {
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                email: req.body.email,
+                mobile: req.body.mobile,
+                password: req.body.password, 
+            },
+            {
+                new: true, 
+                runValidators: true, 
+            }
+        ).select('-password');
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json(updatedUser);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
 
 module.exports = { register, login, getAllUsers, getaUser, deleteUser, updateUser};
