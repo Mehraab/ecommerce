@@ -1,0 +1,26 @@
+const express = require('express');
+const dbConnector = require('./config/dbConnector');
+const app = express();
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const { notFound, errorHandler } = require('./middlewares/errorHandler');
+const dotenv = require('dotenv').config();
+
+const PORT = process.env.PORT || 4000;
+
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+const authRoutes = require('./routes/authRoutes');
+
+app.use('/api/auth', authRoutes);
+
+
+app.use(notFound);
+app.use(errorHandler);
+
+dbConnector();
+app.listen(PORT, () => {
+    console.log(`Server is running on PORT ${PORT}`);
+})
