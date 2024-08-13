@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 
-const generateToken = (user) => {
+const generateRefreshToken = (user) => {
     const payload = {
     id: user._id,
     name: user.name,
@@ -8,8 +8,8 @@ const generateToken = (user) => {
     role: user.role
   };
     return jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: '1d', // Token expires in 1 day
+        expiresIn: '3d', // Token expires in 1 hour
     });
 };
 
-module.exports = generateToken;
+module.exports = generateRefreshToken;
