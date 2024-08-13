@@ -1,6 +1,9 @@
 const User = require("../models/User");
 const generateToken = require("../utils/generateToke");
-const asyncHandler = require("express-async-handler")
+const generateRefreshToken = require("../utils/refreshToken");
+const asyncHandler = require("express-async-handler");
+const validateId = require("../utils/validateMongoID");
+const jwt = require('jsonwebtoken');
 
 const register = asyncHandler(async (req, res) => {
         const email = req.body.email;
@@ -23,6 +26,22 @@ const login = asyncHandler(async (req, res) => {
         if (!user || !(await user.matchPassword(password))) {
             throw new Error('User does not exist');
         }
+        const refreshToken = generateRefreshToken(user);
+        const updateUser = await User.findByIdAndUpdate(
+            user.id,
+            {
+                refreshToken: refreshToken,
+            },
+            {
+                new: true,
+            }
+        );
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 72*60*60*1000,
+        })
 
         const token = generateToken(user);
 
@@ -44,6 +63,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const getaUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
+    validateId(id);
     try {
         const getUser = await User.findById(id).select('-password');
         res.status(200).json(getUser);
@@ -54,6 +74,7 @@ const getaUser = asyncHandler(async (req, res) => {
 
 const deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
+    validateId(id);
     try {
         const deleteUser = await User.findByIdAndDelete(id).select('-password');
         res.status(200).json(deleteUser);
@@ -64,6 +85,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
+    validateId(id);
     try {
         const updatedUser = await User.findByIdAndUpdate(
             id,
@@ -92,6 +114,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
 const blockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    validateId(id);
     try {
         const blockUser = await User.findByIdAndUpdate(
             id,
@@ -116,6 +139,7 @@ const blockUser = asyncHandler(async (req, res) => {
 
 const unblockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
+    validateId(id);
     try {
         const unblockUser = await User.findByIdAndUpdate(
             id,
@@ -138,14 +162,60 @@ const unblockUser = asyncHandler(async (req, res) => {
     }
 });
 
+const handleRefreshToken = asyncHandler(async (req, res) => {
+    const cookie = req.cookies;
+
+    if (!cookie?.refreshToken) throw new Error("No refresh Token");
+
+    const refreshToken = cookie.refreshToken;
+    const user = await User.findOne({ refreshToken });
+
+    if (!user) throw new Error("Refresh token doesnt match with the db");
+
+    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decode) => {
+        if (err || user.id !== decode.id) throw new Error("There is something wrong with refresh token");
+        
+        const accressToken = generateToken(user);
+        res.json({ accressToken });
+    })
+});
+
+const logOut = asyncHandler(async (req, res) => { 
+    const cookie = req.cookies;
+
+    if (!cookie?.refreshToken) throw new Error("No refresh Token");
+
+    const refreshToken = cookie.refreshToken;
+    const user = await User.findOne({ refreshToken });
+
+    if (!user) {
+        res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: true,
+        });
+        return res.sendStatus(204);
+    }
+
+    await User.findByIdAndUpdate(user.id, {
+        refreshToken: "",
+    });
+    res.clearCookie("refreshToken", {
+            httpOnly: true,
+            secure: true,
+        });
+    res.sendStatus(204).json({message: "Logout sucessfully"});
+});
+
 
 module.exports = {
     register,
     login,
+    logOut,
     getAllUsers,
     getaUser,
     deleteUser,
     updateUser,
     blockUser,
-    unblockUser
+    unblockUser,
+    handleRefreshToken
 };
