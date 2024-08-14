@@ -203,7 +203,7 @@ const logOut = asyncHandler(async (req, res) => {
             httpOnly: true,
             secure: true,
         });
-    res.sendStatus(204).json({message: "Logout sucessfully"});
+    res.sendStatus(204);
 });
 
 
