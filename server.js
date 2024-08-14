@@ -15,8 +15,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productRoutes')
 
 app.use('/api/auth', authRoutes);
+app.use('/api/product', productRoutes);
 
 
 app.use(notFound);
