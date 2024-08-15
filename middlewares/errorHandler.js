@@ -1,4 +1,3 @@
-
 const notFound = (req, res, next) => {
     const error = new Error(`Not found: ${req.originalUrl}`);
     res.status(404);
@@ -6,12 +5,13 @@ const notFound = (req, res, next) => {
 }
 
 const errorHandler = (err, req, res, next) => {
-    const statusCode = res.statusCode == 200 ? 500 : res.statusCode;
+    const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
     res.status(statusCode);
     res.json({
-        messsage: err.message,
-        stack : err?.stack
-    })
+        message: err.message,
+        // Show stack trace only in development mode
+        ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
 };
 
 module.exports = { errorHandler, notFound };

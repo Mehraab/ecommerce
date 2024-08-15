@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 var productSchema = new mongoose.Schema({
     title:{
@@ -28,19 +29,19 @@ var productSchema = new mongoose.Schema({
         default: 0,
     },
     category: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "category",
+        type: String,
+        required: true,
     },
     brand: {
         type: String,
-        enum:['Apple','Samsung','Asus','Lenevo'],
+        required: true,
     },
     image: {
         type: Array,
     },
     color: {
         type: String,
-        enum:['Red','Green','Blue','Yellow'],
+        required: true,
     },
     ratings: {
         star: Number,
