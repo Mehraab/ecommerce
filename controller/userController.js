@@ -4,6 +4,7 @@ const generateRefreshToken = require("../utils/refreshToken");
 const asyncHandler = require("express-async-handler");
 const validateId = require("../utils/validateMongoID");
 const jwt = require('jsonwebtoken');
+const userService = require("../service/userService");
 
 const register = asyncHandler(async (req, res) => {
         const email = req.body.email;
@@ -24,7 +25,7 @@ const login = asyncHandler(async (req, res) => {
     try {
         const user = await User.findOne({ email });
         if (!user || !(await user.matchPassword(password))) {
-            throw new Error('User does not exist');
+            throw new Error('Invalid credentials or user doesnt exist');
         }
         const refreshToken = generateRefreshToken(user);
         const updateUser = await User.findByIdAndUpdate(
@@ -94,7 +95,6 @@ const updateUser = asyncHandler(async (req, res) => {
                 lastname: req.body.lastname,
                 email: req.body.email,
                 mobile: req.body.mobile,
-                password: req.body.password, 
             },
             {
                 new: true, 
@@ -206,6 +206,17 @@ const logOut = asyncHandler(async (req, res) => {
     res.sendStatus(204);
 });
 
+const updatePassword = asyncHandler(async (req, res) => {
+    try {
+        const user = await userService.updatePassword(req);
+
+        res.json(user);
+    }
+    catch (err) {
+        throw new Error(err);
+    }
+ });
+
 
 module.exports = {
     register,
@@ -217,5 +228,6 @@ module.exports = {
     updateUser,
     blockUser,
     unblockUser,
-    handleRefreshToken
+    handleRefreshToken,
+    updatePassword
 };
