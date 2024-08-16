@@ -215,8 +215,29 @@ const updatePassword = asyncHandler(async (req, res) => {
     catch (err) {
         throw new Error(err);
     }
- });
+});
+ 
+const resetPasswordToken = asyncHandler(async (req, res) => { 
+    try {
+        const token = await userService.resetPassToken(req);
 
+        res.json({token: token});
+    }
+    catch (error) {
+        throw new Error(error);
+    }
+});
+
+const resetPassword = asyncHandler(async (req, res) => { 
+    try {
+        const user = await userService.resetPass(req);
+
+        res.json(user);
+    }
+    catch (error) {
+        throw new Error(error);
+    }
+});
 
 module.exports = {
     register,
@@ -229,5 +250,7 @@ module.exports = {
     blockUser,
     unblockUser,
     handleRefreshToken,
-    updatePassword
+    updatePassword,
+    resetPasswordToken,
+    resetPassword
 };
